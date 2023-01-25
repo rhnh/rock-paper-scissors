@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "  type": "module",
+  "devDependencies": {
+    "esbuild-plugin-import-pattern": "^0.1.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "esbuild": "0.17.4"
+  },
+  "scripts": {
+    "build": "esbuild src/app.ts --bundle --outdir=js --watch"
+  }
+}
