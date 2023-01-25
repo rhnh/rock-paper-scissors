@@ -25,23 +25,16 @@
       arena.removeChild(arena.firstChild);
     }
   };
-  var callWinner = (move2) => {
-    if (move2 === 1) {
+  var callWinner = (player) => {
+    if (player === 1) {
       return "You won!";
     }
-    if (move2 === 2) {
+    if (player === 2) {
       return "You lost";
     }
-    if (move2 === 0) {
+    if (player === 0) {
       return "It is a draw";
     }
-  };
-  var addAnimation = ({
-    selector,
-    className
-  }) => {
-    const arenaImages = document.querySelectorAll(selector);
-    arenaImages.forEach((image) => image.classList.add(className));
   };
 
   // src/types.ts
@@ -74,10 +67,8 @@
   }
 
   // src/app.ts
-  var TOTAL_ROUNDS = 3;
-  var GAMES_PER_ROUND = 3;
-  var game = 0;
-  var round = 0;
+  var TOTAL_ROUNDS = 5;
+  var round = 1;
   var wins = 0;
   var draws = 0;
   var attachEventListeners = () => {
@@ -94,83 +85,78 @@
             className: "arena-images-animation"
           };
           const allButtons = document.querySelectorAll(".player-buttons");
-          const moveName = eventTarget.getAttribute(
+          removeButtons(allButtons);
+          removeArenaAllItems();
+          const playerMoveName = eventTarget.getAttribute(
             "name"
           );
-          const playerMove = changeNameToMove(moveName);
-          const result = new Promise((resolve) => {
-            resolve(allButtons);
-          });
-          result.then((value) => {
-            addAnimation(animatedObject);
-            removeArenaAllItems();
-            const playerAnimatedHand = document.createElement("img");
-            const opponentAnimatedHand = document.createElement("img");
-            opponentAnimatedHand.setAttribute(
-              "src",
-              `./images/rock-moving-bot.svg`
-            );
-            playerAnimatedHand.setAttribute("src", `./images/rock-moving.svg`);
-            opponentAnimatedHand.classList.add("arena-images-animation");
-            playerAnimatedHand.classList.add("arena-images-animation");
-            arena.appendChild(playerAnimatedHand);
-            arena.appendChild(opponentAnimatedHand);
-            return value;
-          }).then((value) => {
-            const playerMoveImage = changeNameToMove(moveName);
-            if (TOTAL_ROUNDS === round && game === GAMES_PER_ROUND) {
-              removeArenaAllItems();
-              return false;
-            }
-            setTimeout(() => {
-              removeArenaAllItems();
-              const playerImage = document.createElement("img");
-              playerImage.setAttribute("src", `./images/${moveName}.svg`);
-              const opponentImage = document.createElement("img");
-              setPreviousMove(playerMoveImage);
-              const opponentImageMove = changeMoveToName(opponentMove);
-              opponentImage.setAttribute(
-                "src",
-                `./images/${opponentImageMove}`
-              );
-              opponentImage.classList.add("opponentImage");
-              playerImage.classList.add("playerImage");
-              arena.appendChild(playerImage);
-              arena.appendChild(opponentImage);
-              if (game === GAMES_PER_ROUND) {
-                game = 0;
-              }
-              round += game % GAMES_PER_ROUND === 0 ? 1 : 0;
-              game++;
-            }, 1e3);
-            const opponentMove = move();
-            let winner = getWinner(playerMove, opponentMove);
-            if (winner === 1) {
-              wins++;
-            }
-            if (winner === 0) {
-              draws++;
-            }
-            const par = document.createElement("p");
-            let winnerMessage = callWinner(winner);
-            par.innerHTML = winnerMessage;
-            arena.appendChild(par);
-            const messageBoard = document.createElement("p");
-            messageBoard.innerHTML = `Round ${round} <br/> Game ${game}`;
-            const board = document.getElementById("board");
-            const announceWinner = document.createElement("p");
-            announceWinner.innerHTML = `You have win ${wins} of 9 games. And there were ${draws} draws!`;
-            while (board.firstChild) {
-              board.removeChild(board.firstChild);
-            }
-            board.appendChild(messageBoard);
-            board.appendChild(announceWinner);
-            console.log(game, round, wins, draws, 9);
-            return { playerMoveImage, winner };
-          });
+          const playerMove = changeNameToMove(playerMoveName);
+          const opponentMove = move();
+          setPreviousMove(playerMove);
+          const sections = document.createElement("section");
+          showAnimation(sections, "./images/rock-moving.svg");
+          arena.appendChild(
+            showAnimation(sections, "./images/rock-moving-bot.svg")
+          );
+          showResult({ arena, playerMove, opponentMove, buttons: allButtons });
         }
       }
     });
+  };
+  var removeButtons = (buttons) => {
+    buttons.forEach((btn) => btn.classList.add("hidden"));
+  };
+  var showButtons = (buttons) => {
+    buttons.forEach((btn) => btn.classList.remove("hidden"));
+  };
+  var showAnimation = (sections, file, className) => {
+    const playerAnimation = document.createElement("img");
+    playerAnimation.setAttribute("src", file);
+    playerAnimation.classList.add(`arena-images-animation`);
+    playerAnimation.classList.add(className);
+    sections.appendChild(playerAnimation);
+    return sections;
+  };
+  var showResult = ({
+    arena,
+    playerMove,
+    opponentMove,
+    buttons
+  }) => {
+    if (round === TOTAL_ROUNDS) {
+      removeArenaAllItems();
+      const overall = document.createElement("h3");
+      const losses = TOTAL_ROUNDS - (draws + wins);
+      overall.innerHTML = `You won ${wins} <br/> lost ${losses} <br/>  and drew ${draws} out of ${TOTAL_ROUNDS}`;
+      arena.appendChild(overall);
+      return;
+    }
+    setTimeout(() => {
+      removeArenaAllItems();
+      const winner = getWinner(playerMove, opponentMove);
+      if (winner === 0) {
+        draws++;
+      } else if (winner === 1) {
+        wins++;
+      }
+      const winnerName = callWinner(winner);
+      const boardMessage = document.createElement("p");
+      boardMessage.innerHTML = `Round: ${round}/${TOTAL_ROUNDS} <br/> ${winnerName}`;
+      const playerMoveImage = changeMoveToName(playerMove);
+      const opponentMoveImage = changeMoveToName(opponentMove);
+      const playerImage = document.createElement("img");
+      playerImage.setAttribute("src", `./images/${playerMoveImage}`);
+      const opponentImage = document.createElement("img");
+      opponentImage.setAttribute("src", `./images/${opponentMoveImage}`);
+      opponentImage.classList.add("opponentImage");
+      const sections = document.createElement("section");
+      sections.appendChild(playerImage);
+      sections.appendChild(opponentImage);
+      arena.appendChild(boardMessage);
+      arena.appendChild(sections);
+      showButtons(buttons);
+      round++;
+    }, 2e3);
   };
   attachEventListeners();
 })();

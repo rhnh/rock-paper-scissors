@@ -47,14 +47,14 @@ export const addArenaChild = (el: HTMLElement) => {
 
 
 
-export const callWinner = (move: Player | 0) => {
-  if (move === 1) {
+export const callWinner = (player: Player | 0) => {
+  if (player === 1) {
     return "You won!"
   }
-  if (move === 2) {
+  if (player === 2) {
     return "You lost"
   }
-  if (move === 0) {
+  if (player === 0) {
     return "It is a draw"
   }
 }
